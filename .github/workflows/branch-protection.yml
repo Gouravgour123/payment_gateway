@@ -1,0 +1,41 @@
+name: Add Branch Protection
+
+on:
+  push:
+    branches:
+      - main  # Modify this to match your main branch name
+
+jobs:
+  add-branch-protection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Add branch protection
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: branches } = await github.repos.listBranches({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const mainBranch = branches.find(branch => branch.name === 'main');  // Modify 'main' if needed
+            if (mainBranch) {
+              await github.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'main',  // Modify this to match your main branch name
+                required_status_checks: null,  // Add your desired protection settings here
+                enforce_admins: true,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 1,
+                  dismiss_stale_reviews: true,
+                  require_code_owner_reviews: true
+                }
+              });
+            } else {
+              console.log('Main branch not found');
+            }

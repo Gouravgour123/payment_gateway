@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  profile_photo String?
+  login_from    String?
+  first_name    String
+  status        String?
+  last_name     String
+  role          String       @default("user")
+  email         String       @unique
+  mobile_number String?
+  password      String
+  last_login_at DateTime?
+  otps          otp[]
+}
+
+model temp_upload {
+  id          Int      @id @default(autoincrement())
+  file_name   String?
+  uploaded_at DateTime @default(now())
+}
+
+model otp {
+  id          Int      @id @default(autoincrement())
+  context     String
+  otp         Int
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  genrated_at DateTime @default(now())
+  method      String
+}
+
+model raw_message {
+  id          Int       @id @default(autoincrement())
+  receiver    String 
+  message     String
+  processed   Int       @default(0)
+  created_at  DateTime  @default(now())
+}
+
+model received_payment_info {
+  id   Int @id @default(autoincrement())
+  utr  String
+  amount Decimal
+  status Int
+  created_at DateTime @default(now())
+  last_updated_at DateTime @default(now())
+}
+
+model admin {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  role          String   
+}
+
+enum  status{
+  active
+  inactive
+}
+
+model upi {
+  id           Int      @id @default(autoincrement())
+  phone_number  String
+  upi_id      String
+  status      status  @default(active)
+
+}
+
+enum  status_for_bank_account{
+  active
+  inactive
+}
+model bank_account {
+id                Int             @id @default(autoincrement())
+name              String
+bank_name         String
+phone_number      String
+account_number    String         @unique
+ifsc              String
+status status_for_bank_account @default(active)
+}
+enum  status_for_merchant{
+  active
+  inactive
+}
+
+
+model merchant{
+    id        Int     @id @default(autoincrement())
+    name         String
+    email        String   @unique
+    password     String
+    web_url      String?
+    platform_name String
+    redirectedurl String?
+    webhooksurl  String?
+    secrate_key   String
+    secrate_IV    String
+    agent_code    String
+    status        status_for_merchant @default(active)
+}
+
+enum status_for_user_payment_request{
+   sucess
+   pending
+}
+
+
+
+
+model user_payment_request {
+     id              String    @id @default(uuid())
+     merchant_id     String
+     user_id         String
+     request_amount  String
+     created_at      DateTime @default(now())
+     utr             String?
+     status          status_for_user_payment_request
+     updated_at      DateTime @default(now())
+     resolved        Boolean    @default(false) 
+     upi_id          String?
+     amount_recived  String?
+}
